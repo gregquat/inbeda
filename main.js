@@ -5,7 +5,7 @@ var Alien = function(aType,aLine,aCol){
 	this.alive = true;
 	this.height = 20;
 	this.width = 28;
-	this.positionX = 150+this.width*this.column;
+	this.positionX = 10+this.width*this.column;
 	this.positionY = 10+30*this.line;
 	this.direction = 1;
 	this.state = 0;
@@ -19,12 +19,12 @@ var Alien = function(aType,aLine,aCol){
 		return this.state;
 	};
 
-	this.getPositionX = function(){ //return the horizontal position
-		return ;
+	this.down = function(){ //down the alien after changing direction
+		this.positionY = this.positionY + 10;
 
 	};
 
-	this.move = function() { //set new position after moving
+	this.move = function() { //set new position after moving and draw the alien
 		if(this.alive){
 			this.positionX = this.positionX+ 5*Game.direction;
 			this.draw();
@@ -56,11 +56,14 @@ Game = {
 	width: 0,
 	interval: 600,
 	direction: 1,
+	animation: null,
+	alives:0,
 
 	init: function(aWidth,aHeight) { //initialize default position and behaviour
 		for(i=0;i<5;i++){
 			for(j=0;j<11;j++){
 				this.aliens[i][j] = new Alien(this.types[i],i,j);
+				this.alives++;
 				this.aliens[i][j].draw();
 			}
 		}
@@ -94,10 +97,21 @@ Game = {
 		}
 		if(this.closeToLeft() || this.closeToRight()){
 			this.changeDirection();
+			for(i=0;i<5;i++){
+				for(j=0;j<11;j++){							
+					this.aliens[i][j].down();
+				}
+			}
+			this.increaseSpeed();
 		}
 	},
 	play: function(){ //play the game
-		setInterval("Game.animate()",this.interval);
+		this.animation = setInterval("Game.animate()",this.interval);
+	},	
+	increaseSpeed: function(){ //play the game
+		clearInterval(this.animation);
+		this.interval = this.interval-10;
+		this.animation = setInterval("Game.animate()",this.interval);
 	},	
 };
 
@@ -109,6 +123,6 @@ if (element.getContext) {
 	var pic = new Image();
 	pic.src = 'sprite.png';		
 
-	Game.init(600,700);
+	Game.init(530,700);
 }
 
