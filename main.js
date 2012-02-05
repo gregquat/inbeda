@@ -5,7 +5,7 @@ var Alien = function(aType,aLine,aCol){
 	this.alive = true;
 	this.height = 20;
 	this.width = 28;
-	this.positionX = 10+this.width*this.column;
+	this.positionX = 100+this.width*this.column;
 	this.positionY = 10+30*this.line;
 	this.direction = 1;
 	this.state = 0;
@@ -49,6 +49,40 @@ var Alien = function(aType,aLine,aCol){
 	}
 };
 
+Gun = {
+	position: 120,
+
+	init: function(){
+		this.draw();
+	},
+
+	draw: function() {
+		canvas.drawImage(pic,85,0,28,20,this.position,470,28,20);
+	},
+
+	fire: function() {
+		console.log('boum');
+	},
+
+	toleft: function(){
+		if(this.position-5>0){
+			canvas.clearRect(0,472,Game.width,28);
+			this.position -= 5;
+			this.draw();
+		}
+	},
+
+	toright: function(){
+		if(this.position+30<Game.width){
+			canvas.clearRect(0,472,Game.width,28);
+			this.position += 5;
+			this.draw();
+		}
+	},
+
+};
+
+
 Game = {
 	types: [1,2,2,3,3], //define kinds of aliens
 	aliens: [[11],[11],[11],[11],[11]],
@@ -69,6 +103,9 @@ Game = {
 		}
 		this.width = aWidth;
 		this.height = aHeight;
+
+		Gun.init();
+
 		this.play();
 	},
 
@@ -89,7 +126,7 @@ Game = {
 	},
 
 	animate: function(){ //move the aliens
-		canvas.clearRect(0,0,this.width,this.height);
+		canvas.clearRect(0,0,this.width,this.height-28);
 		for(i=0;i<5;i++){
 			for(j=0;j<11;j++){							
 				this.aliens[i][j].move();
@@ -113,6 +150,13 @@ Game = {
 		this.interval = this.interval-10;
 		this.animation = setInterval("Game.animate()",this.interval);
 	},	
+
+	onkeydown: function(ev){
+        if(ev.keyCode == 37) Gun.toleft();
+        else if(ev.keyCode == 39) Gun.toright();
+        else if(ev.keyCode == 32) Gun.fire();
+        else return;
+    },
 };
 
 //define the global context of the game
@@ -123,6 +167,8 @@ if (element.getContext) {
 	var pic = new Image();
 	pic.src = 'sprite.png';		
 
-	Game.init(530,700);
+	document.body.onkeydown = function(ev) { Game.onkeydown(ev); };
+
+	Game.init(530,500);
 }
 
