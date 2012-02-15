@@ -5,6 +5,8 @@
 <head>
 	<style>
 		#premierCanvas{background-color:black;}
+		#score{position:absolute;width:200px;height:30px;top:100px;left:650px;border:2px solid #333;border-radius:7px 7px 7px;}
+		#alives{position:absolute;width:200px;height:30px;top:140px;left:650px;border:2px solid #333;border-radius:7px 7px 7px;}
 	</style>
 
 </head>
@@ -12,8 +14,9 @@
 
 <body>
 
-<!--<h1>Inbeda, the amazing javascript Space Invaders</h1>-->
-
+<h1>Inbeda, the amazing javascript Space Invaders</h1>
+<div id="score"></div>
+<div id="alives"></div>
 <canvas id="premierCanvas" class="mesCanvas" width="530" height="500">
 	Votre navigateur ne supporte pas les Canvas :(
 </canvas>
