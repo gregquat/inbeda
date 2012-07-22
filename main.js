@@ -1,22 +1,22 @@
 var Alien = function(aType,aLine,aCol){
 	this.type = aType;
+	this.points = 40-10*aType;
 	this.line = aLine;
 	this.column = aCol;
 	this.alive = true;
 	this.height = 20;
 	this.width = 28;
 	this.positionX = 100+this.width*this.column;
-	this.positionY = 10+30*this.line;
+	this.positionY = 100+30*this.line;
 	this.direction = 1;
 	this.state = 0;
 
-	this.getState = function(){ //change the state (2 different images for each alien)
+	this.changeState = function(){ //change the state (2 different images for each alien)
 		if(this.state == 0){
 			this.state = 20;
 		}else{
 			this.state = 0;
 		}
-		return this.state;
 	};
 
 	this.down = function(){ //down the alien after changing direction
@@ -24,31 +24,41 @@ var Alien = function(aType,aLine,aCol){
 
 	};
 
-	this.move = function() { //set new position after moving and draw the alien		
-		if(this.alive){			
-			this.positionX = this.positionX+ 5*Game.direction;
+	this.move = function() { //set new position after moving and draw the alien
+		if(this.positionY >= Game.height-50){
+			Game.over();
+		}
+		this.positionX = this.positionX+ 5*Game.direction;
+		this.changeState();
+		if(this.alive){
 			this.draw();
 		}
-		canvas2.clearRect(0,0,Game.width,Game.height);
 	};	
 
-	this.draw = function(){	//draw the alien to his new position
-		canvas.drawImage(
-			pic,
-			this.width*(this.type-1),
-			this.getState(),
-			this.width,
-			this.height,
-			this.positionX,
-			this.positionY,
-			this.width,
-			this.height);
+	this.checkCollision = function(){ //Check if the alien is killed by gun ray
+		if(Gun.ray.active == true && this.alive == true){
+			if((Gun.ray.positionX >= this.positionX && Gun.ray.positionX <= (this.positionX + this.width)) 
+			&& (Gun.ray.positionY >= this.positionY && Gun.ray.positionY <= (this.positionY + this.height))){
+				this.kill();
+				Gun.ray.destroy();
+			}
+		}
 	};
 
-	this.kill = function() { //kill the alien
-		this.alive = false;
-		canvas.clearRect(this.positionX,this.positionY,this.width,this.height);
-		canvas.drawImage(
+	this.draw = function(){	//draw the alien to his new position
+		if(this.alive){ //draw the alien
+			canvas.drawImage(
+				pic,
+				this.width*(this.type-1),
+				this.state,
+				this.width,
+				this.height,
+				this.positionX,
+				this.positionY,
+				this.width,
+				this.height);
+		}else if(this.alive == null){ //draw the explosion
+			canvas.drawImage(
 			pic,
 			85,
 			20,
@@ -58,90 +68,105 @@ var Alien = function(aType,aLine,aCol){
 			this.positionY,
 			this.width,
 			this.height);
-		canvas2.clearRect(0,0,Game.width,Game.height);
-	}
-
-	this.checkCollision = function(){
-		if(Gun.gunray != null && this.alive == true){
-			if((Gun.gunray.positionX >= this.positionX && Gun.gunray.positionX <= (this.positionX + this.width)) 
-			&& (Gun.gunray.positionY >= this.positionY && Gun.gunray.positionY <= (this.positionY + this.height))){
-				this.kill();
-				Gun.gunray.destroy();
-			}
+			this.alive = false; //alien won't be displayed any more
 		}
-	}
-};
+	};
 
-var Gunray = function(aPos){
-  this.positionX = aPos;
-  this.positionY = 444;
-  this.length = 15;
-
-  this.draw = function(){	//draw the alien to his new position
-
-  	for(i=0;i<5;i++){
-			for(j=0;j<11;j++){							
-				Game.aliens[i][j].checkCollision();
-			}
-		}
-
-  	canvas2.clearRect(0,0,Game.width,Game.height);
-		canvas2.beginPath();
-		canvas2.lineWidth=2;
-		canvas2.strokeStyle='white';
-		canvas2.moveTo(this.positionX,this.positionY);
-		canvas2.lineTo(this.positionX,this.positionY+this.length);
-		canvas2.closePath();
-		canvas2.stroke();
-		this.positionY -= 10;
-
-		if(this.positionY<=0){
-			this.destroy();
-		}
-	}
-
-	this.destroy = function(){ //Destroy the gunray
-		clearInterval(Gun.gunrayAnimation);		
-		Gun.gunray = null;
-		canvas2.clearRect(0,0,Game.width,Game.height);
+	this.kill = function() { //kill the alien
+		this.alive = null;
+		canvas.clearRect(this.positionX,this.positionY,this.width,this.height);		
+		Game.refreshScore(this.points);
 	}
 };
 
 Gun = {
-	position: 220,
-	gunrayAnimation: null,
+	position: 220,	
+	toleft:false,
+	toright:false,
 
-	init: function(){
+	init: function(){ //initialize the gun and his move
 		this.draw();
-		this.toright();
+		this.toLeft();
+		this.toRight();
+		setInterval("Gun.toLeft()",30);
+		setInterval("Gun.toRight()",30);
 	},
 
-	draw: function() {
+	draw: function() { //draws the gun
 		canvas.drawImage(pic,85,0,28,20,this.position,470,28,20);
 	},
 
-	fire: function() {
-		if(this.gunray ==null){
-			this.gunray = new Gunray(this.position);
-			this.gunrayAnimation = setInterval("Gun.gunray.draw()",30);
+	fire: function() { //shot
+		this.ray.create();
+	},
+
+	toLeft: function(){ //moves the gun to left
+		if(this.toleft){
+			if(this.position-5>0){
+				canvas.clearRect(0,472,Game.width,28);
+				this.position -= 5;
+				this.draw();
+			}
 		}
 	},
 
-	toleft: function(){
-		if(this.position-5>0){
-			canvas.clearRect(0,472,Game.width,28);
-			this.position -= 5;
-			this.draw();
+	toRight: function(){ //moves the gun to right
+		if(this.toright){
+			if(this.position+30<Game.width){
+				canvas.clearRect(0,472,Game.width,28);
+				this.position += 5;
+				this.draw();
+			}
 		}
 	},
 
-	toright: function(){
-		if(this.position+30<Game.width){
-			canvas.clearRect(0,472,Game.width,28);
-			this.position += 5;
-			this.draw();
-		}
-	},
+	ray:{ //gun ray
+		positionX: 0,
+		positionY: 465,
+		length: 5,
+		speed:15,
+		animation: null,
+		active: false,
+		create: function(){ //created the ray if it does not exist
+			if(!this.active){
+				this.positionX = Gun.position+14;
+				this.active = true;
+				this.animation = setInterval("Gun.ray.animate()",this.speed);
+			}
+
+		},
+		animate: function(){ //animate the ray
+			this.positionY -= this.length;
+			if(this.positionY<=5) this.destroy();
+			else{
+				Game.drawAliens();				
+				this.draw();
+			}			
+		},
+		draw: function(){ //draw the ray and check collision with aliens
+			if(this.active){
+				canvas.beginPath();
+				canvas.strokeStyle='white';
+				canvas.lineWidth=2;
+				canvas.moveTo(this.positionX,this.positionY);
+				canvas.lineTo(this.positionX,this.positionY+this.length);
+				canvas.stroke();
+
+				for(i=0;i<5;i++){
+					for(j=0;j<11;j++){							
+						Game.aliens[i][j].checkCollision();
+					}
+				}
+			}
+		},
+		destroy: function(){ //destroy the ray
+			this.positionY = 465;
+			this.active = false;
+			clearInterval(this.animation);			
+			this.animation = null;
+			Game.drawAliens();
+		},
+	}
 
 };
 
@@ -150,10 +175,11 @@ Game = {
 	aliens: [[11],[11],[11],[11],[11]],
 	height: 0,
 	width: 0,
-	interval: 600,
+	interval: 1000,
 	direction: 1,
 	animation: null,
-	alives:0,
+	alives:1,
+	score:0,
 
 	init: function(aWidth,aHeight) { //initialize default position and behaviour
 		for(i=0;i<5;i++){
@@ -165,10 +191,9 @@ Game = {
 		}
 		this.width = aWidth;
 		this.height = aHeight;
-
-		Gun.init();
-
 		this.play();
+		Gun.init();
+		this.refreshScore(0);
 	},
 
 	changeDirection: function(){ //change the direction (left or right)
@@ -178,17 +203,28 @@ Game = {
 			this.direction = 1;
 		}
 	},
-
-	closeToLeft: function(){
+  clearCanvas: function(){ //clear the canvas (but not the gun)
+  	canvas.clearRect(0,0,this.width,this.height-28);
+  },
+	closeToLeft: function(){ //check if the aliens reach the left border
 		return (this.aliens[0][0].positionX - 10 < 0)?true:false;
 	},
-
-	closeToRight: function(){
+	closeToRight: function(){ //check if the aliens reach the right border
 		return (this.aliens[4][10].positionX + 35 > this.width)?true:false;
 	},
-
-	animate: function(){ //move the aliens
-		canvas.clearRect(0,0,this.width,this.height-28);
+	drawAliens: function(){ //draw the aliens
+		this.checkAliens();
+		this.clearCanvas();
+		for(i=0;i<5;i++){
+			for(j=0;j<11;j++){							
+				this.aliens[i][j].draw();
+			}
+		}
+	},
+	animate: function(){ //move the aliens		
+		this.clearCanvas();
+		Gun.ray.draw();
+		this.checkAliens();
 		for(i=0;i<5;i++){
 			for(j=0;j<11;j++){							
 				this.aliens[i][j].move();
@@ -207,18 +243,43 @@ Game = {
 	play: function(){ //play the game		
 		this.animation = setInterval("Game.animate()",this.interval);
 	},	
-	increaseSpeed: function(){ //play the game
+	increaseSpeed: function(newInterval){ //increase the speed
 		clearInterval(this.animation);
-		this.interval = this.interval-10;
+		if(newInterval===undefined) this.interval = this.interval-10;
+		else this.interval = newInterval;
 		this.animation = setInterval("Game.animate()",this.interval);
 	},	
-
-	onkeydown: function(ev){
-        if(ev.keyCode == 37) Gun.toleft();
-        else if(ev.keyCode == 39) Gun.toright();
-        else if(ev.keyCode == 32) Gun.fire();
-        else return;
-    },
+	onkeydown: function(ev){ //key down event
+    if(ev.keyCode == 37) Gun.toleft = true; 
+    else if(ev.keyCode == 39) Gun.toright = true;
+    else if(ev.keyCode == 32) Gun.fire();
+    else return;
+  },
+  onkeyup: function(ev){ //key up event
+    if(ev.keyCode == 37) Gun.toleft=false;
+    else if(ev.keyCode == 39) Gun.toright=false;
+    else return;
+	},
+	over: function(){ //ends the game
+		clearInterval(this.animation);
+		canvas.clearRect(0,0,this.width,this.height);
+    canvas.font = "40pt Calibri,Geneva,Arial";
+    canvas.strokeStyle = "rgb(FF,0,0)";
+    canvas.fillStyle = "rgb(0,20,180)";
+    canvas.strokeText("Game Over", this.width/2-150, this.height/2-10);
+	},
+  checkAliens: function(){ //check number of aliens
+  	if(this.alives==1) this.increaseSpeed(150);
+  	else if(this.alives<=10) this.increaseSpeed(200);
+  	else if(this.alives<=10) this.increaseSpeed(300);
+  	else if(this.alives<=25) this.increaseSpeed(500);
+  },
+  refreshScore: function(points){ //display the score
+  	this.alives--;
+  	this.score += points;
+  	document.getElementById('score').innerHTML = this.score;
+  	document.getElementById('alives').innerHTML = this.alives;
+  },
 };
 
 //define the global context of the game
@@ -232,12 +293,7 @@ if (element.getContext) {
 	Game.init(530,500);
 
 	document.body.onkeydown = function(ev) { Game.onkeydown(ev); };
+	document.body.onkeyup = function(ev) { Game.onkeyup(ev); };
 
 	
 }
-
-var element2 = document.getElementById('gunraysCanvas');
-if (element2.getContext) {
-	var canvas2 = element2.getContext('2d');
-}
-
