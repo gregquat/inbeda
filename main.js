@@ -175,11 +175,13 @@ Game = {
 	aliens: [[11],[11],[11],[11],[11]],
 	height: 0,
 	width: 0,
-	interval: 1000,
+	interval: 0,
+	intervalDefault: 1000,
 	direction: 1,
 	animation: null,
 	alives:1,
 	score:0,
+	level:1,
 
 	init: function(aWidth,aHeight) { //initialize default position and behaviour
 		for(i=0;i<5;i++){
@@ -194,6 +196,8 @@ Game = {
 		this.play();
 		Gun.init();
 		this.refreshScore(0);
+		document.getElementById('level').innerHTML = this.level;
+		document.getElementById('inter').innerHTML = this.interval;
 	},
 
 	changeDirection: function(){ //change the direction (left or right)
@@ -213,7 +217,6 @@ Game = {
 		return (this.aliens[4][10].positionX + 35 > this.width)?true:false;
 	},
 	drawAliens: function(){ //draw the aliens
-		this.checkAliens();
 		this.clearCanvas();
 		for(i=0;i<5;i++){
 			for(j=0;j<11;j++){							
@@ -240,14 +243,18 @@ Game = {
 			this.increaseSpeed();
 		}
 	},
-	play: function(){ //play the game		
+	play: function(){ //play the game	
+		this.interval = this.intervalDefault;	
+		this.interval = this.interval-(this.level*20);
 		this.animation = setInterval("Game.animate()",this.interval);
 	},	
 	increaseSpeed: function(newInterval){ //increase the speed
 		clearInterval(this.animation);
 		if(newInterval===undefined) this.interval = this.interval-10;
 		else this.interval = newInterval;
+		
 		this.animation = setInterval("Game.animate()",this.interval);
+		document.getElementById('inter').innerHTML = this.interval;
 	},	
 	onkeydown: function(ev){ //key down event
     if(ev.keyCode == 37) Gun.toleft = true; 
@@ -269,10 +276,11 @@ Game = {
     canvas.strokeText("Game Over", this.width/2-150, this.height/2-10);
 	},
   checkAliens: function(){ //check number of aliens
-  	if(this.alives==1) this.increaseSpeed(150);
-  	else if(this.alives<=10) this.increaseSpeed(200);
-  	else if(this.alives<=10) this.increaseSpeed(300);
-  	else if(this.alives<=25) this.increaseSpeed(500);
+  	if(this.alives==0) this.nextLevel();
+	else if(this.alives==1) this.increaseSpeed(150-(this.level*10));
+  	else if(this.alives<=10) this.increaseSpeed(200-(this.level*10));
+  	else if(this.alives<=10) this.increaseSpeed(300-(this.level*10));
+  	else if(this.alives<=25) this.increaseSpeed(500-(this.level*10));
   },
   refreshScore: function(points){ //display the score
   	this.alives--;
@@ -280,6 +288,21 @@ Game = {
   	document.getElementById('score').innerHTML = this.score;
   	document.getElementById('alives').innerHTML = this.alives;
   },
+  nextLevel: function(){
+	//resurect aliens
+	for(i=0;i<5;i++){
+		for(j=0;j<11;j++){							
+			this.aliens[i][j].alive = true;
+			this.alives++;
+		}
+	}
+	clearInterval(this.animation);
+	this.level++;
+	document.getElementById('level').innerHTML = this.level;
+	this.play();
+	this.increaseSpeed(this.interval);
+	document.getElementById('inter').innerHTML = this.interval;
+  }
 };
 
 //define the global context of the game
