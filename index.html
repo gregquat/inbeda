@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="fr">
 
@@ -7,9 +6,10 @@
 	  canvas{position:absolute;left:20px;top:60px;}
 		#aliensCanvas{background-color:black;}
 		#gunraysCanvas{background-color:transparent;}
-		#scoreDiv,#alivesDiv{position:absolute;top:100px;left:650px;}
-		#score,#alives{display:block;width:90px;height:30px;border:2px solid #333;border-radius:7px 7px 7px;text-align:center;font-size: 25px;line-height:30px;}
-		#alivesDiv{top:160px;}
+		#scoreDiv,#alivesDiv,#levelDiv{position:absolute;top:100px;left:650px;}
+		#score,#alives,#level{display:block;width:90px;height:30px;border:2px solid #333;border-radius:7px 7px 7px;text-align:center;font-size: 25px;line-height:30px;}
+		#scoreDiv{top:160px;}
+		#alivesDiv{top:320px;}
 		h2{margin:0;}
 	</style>
 
@@ -17,7 +17,12 @@
 
 
 <body>
-<h1>Inbeda, the amazing javascript Space Invaders</h1>
+<h1>Inbeda, the amazing javascript Space Invaders | Interval : <span id="inter"></span> ms</h1>
+
+<div id="levelDiv">
+	<h2>Level :</h2>
+	<span id="level"></span>
+</div>
 <div id="scoreDiv">
 	<h2>Score :</h2>
 	<span id="score"></span>
